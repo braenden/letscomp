@@ -15,14 +15,13 @@ LetsComp runs as an AU, VST3 and CLAP plug-in on macOS 12 or newer (Apple silico
 
 ### macOS
 
-1. Download the latest `LetsComp-<version>-macOS.zip` from [Releases](https://github.com/braenden/LetsComp/releases).
-2. Unzip it and copy the plug-ins into your plug-in folders:
-   - `LetsComp.component` to `~/Library/Audio/Plug-Ins/Components`
-   - `LetsComp.vst3` to `~/Library/Audio/Plug-Ins/VST3`
-   - `LetsComp.clap` to `~/Library/Audio/Plug-Ins/CLAP`
+1. Download `LetsComp-<version>-macOS.pkg` from [Releases](https://github.com/braenden/LetsComp/releases) and open it.
+2. Follow the installer. It installs the Audio Unit, VST3 and CLAP plug-ins; choose Customize to pick only some, and choose whether to install for all users or only for you.
 3. Rescan plug-ins in your DAW, or restart it.
 
-The release is signed and notarized by Apple, so macOS opens it without warnings.
+The installer and the plug-ins are signed and notarized by Apple, so macOS opens them without warnings.
+
+To install by hand instead, download `LetsComp-<version>-macOS.zip`, unzip it, and copy `LetsComp.component` to `~/Library/Audio/Plug-Ins/Components`, `LetsComp.vst3` to `~/Library/Audio/Plug-Ins/VST3` and `LetsComp.clap` to `~/Library/Audio/Plug-Ins/CLAP`.
 
 ### Windows
 
@@ -130,7 +129,7 @@ The DSP tests cover the gain-computer math, a static curve independent of attack
 
 ## Release
 
-`./scripts/package_mac.sh` builds a universal binary for Apple silicon and Intel, runs the tests, and writes a zip of the AU, VST3 and CLAP and an installer to `build/packages`. Without the settings below everything is signed ad hoc, which is fine for testing on your own Mac, but macOS blocks it on others.
+`./scripts/package_mac.sh` builds a universal binary for Apple silicon and Intel, runs the tests, and writes a zip of the AU, VST3 and CLAP and an installer to `build/packages`. The installer lets people pick the formats and install for all users or only themselves; its pages are in `packaging`. Without the settings below everything is signed ad hoc, which is fine for testing on your own Mac, but macOS blocks it on others.
 
 A release that opens without warnings needs a Developer ID Application certificate, plus a Developer ID Installer certificate for the installer. Store the notarization credentials in the keychain once, using an app-specific password from your Apple Account:
 
