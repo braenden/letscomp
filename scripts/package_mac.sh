@@ -23,7 +23,6 @@ plugins_root="$stage_root/Library/Audio/Plug-Ins"
 zip_root="$package_root/LetsComp-$version"
 zip_file="$package_root/LetsComp-$version-macOS.zip"
 notary_zip="$package_root/notarize.zip"
-component_package="$package_root/LetsComp-$version-component.pkg"
 final_package="$package_root/LetsComp-$version-macOS.pkg"
 artefacts="$project_dir/build/$preset/LetsComp_artefacts/Release"
 
@@ -96,19 +95,46 @@ done
 /usr/bin/ditto -c -k --norsrc --noextattr --noacl --keepParent "$zip_root" "$zip_file"
 rm -rf "$zip_root"
 
-pkgbuild \
-    --root "$stage_root" \
-    --scripts "$project_dir/packaging/scripts" \
-    --identifier "io.github.braenden.letscomp.plugins" \
-    --version "$version" \
-    --install-location / \
-    "$component_package"
-if [[ -n "$installer_identity" ]]; then
-    productbuild --sign "$installer_identity" --package "$component_package" "$final_package"
-else
-    productbuild --package "$component_package" "$final_package"
-fi
-rm -f "$component_package"
+# One package per format, so the installer can offer a choice. Bundles are
+# not relocatable: an older copy elsewhere on the disk must not be updated
+# instead of the one in the plug-in folder.
+components_root="$package_root/components"
+mkdir -p "$components_root"
+formats=(au vst3 clap)
+for index in 1 2 3; do
+    format="${formats[$index]}"
+    bundle="${bundles[$index]}"
+    root="$package_root/root-$format"
+    relative="${bundle#$stage_root/}"
+    mkdir -p "$root/${relative:h}"
+    /usr/bin/ditto "$bundle" "$root/$relative"
+    component_list="$package_root/$format.plist"
+    pkgbuild --analyze --root "$root" "$component_list"
+    entry=0
+    while plutil -extract "$entry" xml1 -o /dev/null "$component_list" 2>/dev/null; do
+        plutil -replace "$entry.BundleIsRelocatable" -bool NO "$component_list"
+        (( ++entry ))
+    done
+    script_arguments=()
+    [[ "$format" == au ]] && script_arguments=(--scripts "$project_dir/packaging/scripts")
+    pkgbuild \
+        --root "$root" \
+        --component-plist "$component_list" \
+        "${script_arguments[@]}" \
+        --identifier "io.github.braenden.letscomp.$format" \
+        --version "$version" \
+        --install-location / \
+        "$components_root/LetsComp-$format.pkg"
+    rm -rf "$root" "$component_list"
+done
+
+distribution="$package_root/distribution.xml"
+sed "s/@VERSION@/$version/g" "$project_dir/packaging/distribution.xml" > "$distribution"
+productbuild_arguments=(--distribution "$distribution" --package-path "$components_root"
+                        --resources "$project_dir/packaging/resources")
+[[ -z "$installer_identity" ]] || productbuild_arguments+=(--sign "$installer_identity")
+productbuild "${productbuild_arguments[@]}" "$final_package"
+rm -rf "$components_root" "$distribution"
 
 if [[ -n "$notary_profile" && -n "$installer_identity" ]]; then
     notarize "$final_package"
