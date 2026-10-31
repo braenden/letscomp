@@ -1,0 +1,34 @@
+name: Build and test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  macos:
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Ninja
+        run: brew install ninja
+      - name: Build and test
+        run: ./scripts/build_mac.sh
+
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test
+        shell: pwsh
+        run: ./scripts/build_windows.ps1
+      - name: Upload plug-ins
+        uses: actions/upload-artifact@v4
+        with:
+          name: LetsComp-windows-x64
+          path: |
+            build/windows-release/LetsComp_artefacts/Release/VST3/LetsComp.vst3
+            build/windows-release/LetsComp_artefacts/Release/CLAP/LetsComp.clap
+          if-no-files-found: error

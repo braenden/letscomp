@@ -1,0 +1,47 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "mac-arm64-release",
+      "displayName": "macOS arm64 Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/mac-arm64-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "LETSCOMP_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "mac-universal-release",
+      "displayName": "macOS Universal Release",
+      "inherits": "mac-arm64-release",
+      "binaryDir": "${sourceDir}/build/mac-universal-release",
+      "cacheVariables": {
+        "LETSCOMP_UNIVERSAL": "ON"
+      }
+    },
+    {
+      "name": "windows-release",
+      "displayName": "Windows x64 Release",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/windows-release",
+      "cacheVariables": {
+        "LETSCOMP_BUILD_TESTS": "ON"
+      },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "mac-arm64-release", "configurePreset": "mac-arm64-release" },
+    { "name": "mac-universal-release", "configurePreset": "mac-universal-release" },
+    { "name": "windows-release", "configurePreset": "windows-release", "configuration": "Release" }
+  ],
+  "testPresets": [
+    { "name": "mac-arm64-release", "configurePreset": "mac-arm64-release", "output": { "outputOnFailure": true } },
+    { "name": "mac-universal-release", "configurePreset": "mac-universal-release", "output": { "outputOnFailure": true } },
+    { "name": "windows-release", "configurePreset": "windows-release", "configuration": "Release", "output": { "outputOnFailure": true } }
+  ]
+}
+
